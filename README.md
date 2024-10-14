@@ -1,0 +1,3 @@
+Projeto destinado a facilitar o trabalho de agendar clientes. A ideia veio de uma necessidade de familiares.
+
+PS: Ainda em desenvolvimento...
