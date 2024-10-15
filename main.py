@@ -55,16 +55,36 @@ def main(pagina: ft.Page):
         preenchimento_dias()
         pagina.update()
 
-    def agendamentos_dia(e):
+    def agendamentos_dia(e): #precisa alterar os condicionais "ifs" para que analise pelo titulo no alertdialog, que será somente a data ou criar uma função separada que funcione após reabrir o alertdialog
         mes, ano = data_selecionada()
         self_date = ''
         if e.control.content.controls[0].controls[0].value != '':
-            pagina.open(dlg_agendamento)
-
             if e.control.content.controls[0].controls[0].value in range(1, 10):
                 self_date = f'0{e.control.content.controls[0].controls[0].value}/{meses.index(mes)+1}/{ano}'
             else:
                 self_date = f'{e.control.content.controls[0].controls[0].value}/{meses.index(mes)+1}/{ano}'
+            dlg_agendamento.title = ft.Text(value=self_date, text_align=ft.TextAlign.CENTER)
+            pagina.open(dlg_agendamento)
+            dic = buscar_dados_filtrados(self_date)
+            for i in range(len(dic['cliente'])):
+                dlg_agendamento.content.controls.append(ft.CupertinoListTile(
+                    notched=True,
+                    bgcolor=ft.colors.GREY_900,
+                    bgcolor_activated=ft.colors.GREY_800,
+                    title=ft.Text(value=dic['cliente'][i]),
+                    subtitle=ft.Text(value=dic['tipo_servico'][i]),
+                    additional_info=ft.Text(value=f'Às {dic['hora'][i]}'),
+                    trailing=ft.PopupMenuButton(
+                        icon=ft.icons.MORE_VERT,
+                        items=[
+                            ft.PopupMenuItem(text="Editar"),
+                            ft.PopupMenuItem(text="Excluir"),
+                        ],
+                    ),
+                ),
+                )
+            dlg_agendamento.update()
+            print(dic)
 
     def data_selecionada() -> tuple[str, int]:
         mes: str = ddmes.value
@@ -175,7 +195,30 @@ def main(pagina: ft.Page):
         for i in range(42):
             if calendario.content.controls[2].controls[i].content.value == int(dia):
                 calendario.content.controls[2].controls[i].bgcolor = 'blue'
-            
+    
+    def fechar_dlg_agendamento(e):
+        dlg_agendamento.content.controls.clear()
+        pagina.close(dlg_agendamento)
+
+    def edit_agendamento(e):
+        pagina.open(ft.AlertDialog(
+            content=ft.Column(
+                width=500,
+                height=50,
+                controls=[ft.CupertinoListTile(
+                    notched=True,
+                    bgcolor=ft.colors.GREY_900,
+                    bgcolor_activated=ft.colors.GREY_800,
+                    title=ft.Text(value=e.control.title.value),
+                    subtitle=ft.Text(value=e.control.subtitle.value),
+                    additional_info=ft.Text(value=e.control.additional_info.value),
+                )]
+            ),
+            actions=[
+                ft.TextButton(text='Fechar', on_click=lambda e: pagina.open(dlg_agendamento))
+            ],
+        ))
+
     ddmes = ft.Dropdown(
         width=140,
         value=meses[dataHoje()[1]-1],
@@ -273,6 +316,7 @@ def main(pagina: ft.Page):
         content=ft.Column(
             width=500,
             height=600,
+            spacing=1,
             controls=[
 
             ]
@@ -280,9 +324,10 @@ def main(pagina: ft.Page):
         actions=[
             ft.TextButton(
                 text='Fechar',
-                on_click=lambda e: pagina.close(dlg_agendamento)
+                on_click=fechar_dlg_agendamento
             )
-        ]
+        ],
+        on_dismiss=fechar_dlg_agendamento
     )
 
     dlg_agendar = Agendamentos(
